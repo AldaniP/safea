@@ -68,8 +68,8 @@ class HomeScreen extends StatelessWidget {
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: AppColors.deepCalmBlue.withValues(alpha: 
-                                    0.15,
+                                  color: AppColors.deepCalmBlue.withValues(
+                                    alpha: 0.15,
                                   ),
                                   borderRadius: BorderRadius.circular(16),
                                 ),
@@ -99,8 +99,8 @@ class HomeScreen extends StatelessWidget {
                                       style: GoogleFonts.poppins(
                                         fontSize: 14,
                                         color: isDark
-                                            ? AppColors.textLight.withValues(alpha: 
-                                                0.7,
+                                            ? AppColors.textLight.withValues(
+                                                alpha: 0.7,
                                               )
                                             : AppColors.textMuted,
                                       ),
@@ -126,7 +126,9 @@ class HomeScreen extends StatelessWidget {
                                 style: GoogleFonts.poppins(
                                   fontSize: 16,
                                   color: isDark
-                                      ? AppColors.textLight.withValues(alpha: 0.8)
+                                      ? AppColors.textLight.withValues(
+                                          alpha: 0.8,
+                                        )
                                       : AppColors.textMuted,
                                 ),
                               ),
@@ -150,8 +152,8 @@ class HomeScreen extends StatelessWidget {
                                       : Colors.white.withValues(alpha: 0.4),
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
-                                    color: AppColors.mutedCream.withValues(alpha: 
-                                      0.5,
+                                    color: AppColors.mutedCream.withValues(
+                                      alpha: 0.5,
                                     ),
                                     width: 1,
                                   ),
@@ -171,8 +173,8 @@ class HomeScreen extends StatelessWidget {
                                           fontSize: 14,
                                           height: 1.5,
                                           color: isDark
-                                              ? AppColors.textLight.withValues(alpha: 
-                                                  0.9,
+                                              ? AppColors.textLight.withValues(
+                                                  alpha: 0.9,
                                                 )
                                               : AppColors.textDark,
                                         ),
@@ -233,7 +235,9 @@ class HomeScreen extends StatelessWidget {
                                   fontSize: 14,
                                   height: 1.6,
                                   color: isDark
-                                      ? AppColors.textLight.withValues(alpha: 0.8)
+                                      ? AppColors.textLight.withValues(
+                                          alpha: 0.8,
+                                        )
                                       : AppColors.textMuted,
                                 ),
                               ),
@@ -309,8 +313,8 @@ class _TenangDuluButtonState extends State<_TenangDuluButton>
               borderRadius: BorderRadius.circular(32),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.deepCalmBlue.withValues(alpha: 
-                    _glowAnimation.value * 0.5,
+                  color: AppColors.deepCalmBlue.withValues(
+                    alpha: _glowAnimation.value * 0.5,
                   ),
                   blurRadius: 30,
                   spreadRadius: 2,

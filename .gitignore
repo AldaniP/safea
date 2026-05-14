@@ -27,6 +27,7 @@ migrate_working_dir/
 **/doc/api/
 **/ios/Flutter/.last_build_id
 .dart_tool/
+.flutter-plugins
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
@@ -43,3 +44,46 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Sensitive Files (Environment variables, keys, etc.)
+.env*
+*.jks
+*.keystore
+*.google_services.json
+google-services.json
+GoogleService-Info.plist
+
+# macOS
+.DS_Store
+
+# Xcode
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/GeneratedPluginRegistrant.h
+**/ios/Flutter/GeneratedPluginRegistrant.m
+**/ios/DerivedData/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.xcuserstate
+project.xcworkspace/xcuserdata/
+Runner.xcworkspace/xcuserdata/
+Runner.xcodeproj/project.xcworkspace/xcuserdata/
+Runner.xcodeproj/xcuserdata/
+
+# Linux Ephemeral
+linux/flutter/ephemeral/
+
+# macOS Ephemeral
+macos/Flutter/ephemeral/
+
+# Windows Ephemeral
+windows/flutter/ephemeral/
+
+
+.specify
+.vscode
+.vscode\n# Database\n*.sqlite\n*.db

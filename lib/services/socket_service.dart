@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
@@ -14,11 +13,12 @@ class SocketService {
   io.Socket? _socket;
 
   // StreamController untuk mendistribusikan aliran metadata tingkat stabilitas emosi ke UI
-  final StreamController<Map<String, dynamic>> _emotionMetadataController = 
+  final StreamController<Map<String, dynamic>> _emotionMetadataController =
       StreamController<Map<String, dynamic>>.broadcast();
-  
+
   /// Stream utama untuk dipantau (listen) oleh antarmuka (UI) secara konstan
-  Stream<Map<String, dynamic>> get emotionMetadataStream => _emotionMetadataController.stream;
+  Stream<Map<String, dynamic>> get emotionMetadataStream =>
+      _emotionMetadataController.stream;
 
   // Reaktif notifier untuk memonitor status ketersediaan sinyal secara real-time
   final ValueNotifier<bool> connectionStatus = ValueNotifier<bool>(false);
@@ -29,13 +29,21 @@ class SocketService {
     if (_socket != null && _socket!.connected) return;
 
     // Guardrail: Konfigurasi tingkat tinggi untuk menjaga stabilitas kanal
-    _socket = io.io(serverUrl, io.OptionBuilder()
-      .setTransports(['websocket']) // Memaksakan murni websocket agar responsif
-      .disableAutoConnect()         // Kendali inisiasi berada secara manual
-      .enableReconnection()         // Guardrail validasi koneksi ulang otomatis
-      .setReconnectionAttempts(10)  // Membatasi retry TCP jika lingkungan terputus total
-      .setReconnectionDelay(2000)   // Backoff jeda waktu per koneksi ulang (2 detik)
-      .build()
+    _socket = io.io(
+      serverUrl,
+      io.OptionBuilder()
+          .setTransports([
+            'websocket',
+          ]) // Memaksakan murni websocket agar responsif
+          .disableAutoConnect() // Kendali inisiasi berada secara manual
+          .enableReconnection() // Guardrail validasi koneksi ulang otomatis
+          .setReconnectionAttempts(
+            10,
+          ) // Membatasi retry TCP jika lingkungan terputus total
+          .setReconnectionDelay(
+            2000,
+          ) // Backoff jeda waktu per koneksi ulang (2 detik)
+          .build(),
     );
 
     // -- Alur pendengaran kejadian koneksi --
@@ -50,11 +58,15 @@ class SocketService {
     });
 
     _socket!.onReconnect((attempt) {
-      debugPrint('🔄 [SocketService] Guardrail Bekerja: Koneksi ulang berhasil pada percobaan ke-$attempt');
+      debugPrint(
+        '🔄 [SocketService] Guardrail Bekerja: Koneksi ulang berhasil pada percobaan ke-$attempt',
+      );
     });
 
     _socket!.onReconnectError((error) {
-      debugPrint('❌ [SocketService] Guardrail Gagal: Percobaan koneksi ulang ditolak - $error');
+      debugPrint(
+        '❌ [SocketService] Guardrail Gagal: Percobaan koneksi ulang ditolak - $error',
+      );
     });
 
     // -- Alur penerimaan konstan nilai balikan metadata tingkat stabilitas emosi --
@@ -76,7 +88,9 @@ class SocketService {
       // Mengirimkan biner byte array langsung melalui jembatan websocket
       _socket!.emit('microphone_audio_stream', audioBuffer);
     } else {
-      debugPrint('⚠️ [SocketService] Paket buffer terbuang: Kanal websocket tidak tersedia.');
+      debugPrint(
+        '⚠️ [SocketService] Paket buffer terbuang: Kanal websocket tidak tersedia.',
+      );
     }
   }
 

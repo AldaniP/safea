@@ -2,6 +2,9 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'screens/assessment/dass21_screen.dart';
+import 'screens/dashboard/dashboard_screen.dart';
+
 void main() {
   runApp(const SafeaAppDemo());
 }
@@ -16,7 +19,7 @@ class SafeaAppDemo extends StatelessWidget {
   Widget build(BuildContext context) {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: themeNotifier,
-      builder: (_, ThemeMode currentMode, __) {
+      builder: (_, ThemeMode currentMode, _) {
         // Adjust status bar style based on theme
         SystemChrome.setSystemUIOverlayStyle(
           SystemUiOverlayStyle(
@@ -133,14 +136,14 @@ class GlassCard extends StatelessWidget {
     final baseColor =
         customColor ??
         (isDark
-            ? Colors.black.withOpacity(0.3)
-            : Colors.white.withOpacity(0.4));
+            ? Colors.black.withValues(alpha: 0.3)
+            : Colors.white.withValues(alpha: 0.4));
     final borderColor = isDark
-        ? Colors.white.withOpacity(0.1)
-        : Colors.white.withOpacity(0.5);
+        ? Colors.white.withValues(alpha: 0.1)
+        : Colors.white.withValues(alpha: 0.5);
     final shadowColor = isDark
-        ? Colors.black.withOpacity(0.2)
-        : const Color(0xFF4A6572).withOpacity(0.05);
+        ? Colors.black.withValues(alpha: 0.2)
+        : const Color(0xFF4A6572).withValues(alpha: 0.05);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),
@@ -151,7 +154,9 @@ class GlassCard extends StatelessWidget {
           elevation: 0,
           child: InkWell(
             onTap: onTap,
-            splashColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+            splashColor: Theme.of(
+              context,
+            ).colorScheme.primary.withValues(alpha: 0.1),
             highlightColor: Colors.transparent,
             child: Container(
               padding: padding,
@@ -190,6 +195,7 @@ class _ResponsiveLayoutState extends State<ResponsiveLayout> {
 
   final List<Widget> _screens = const [
     HomeScreen(),
+    DashboardScreen(), // <--- NEW TAB
     TenangDuluScreen(),
     ChatScreen(),
     VaultScreen(),
@@ -203,7 +209,7 @@ class _ResponsiveLayoutState extends State<ResponsiveLayout> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isDesktop = MediaQuery.of(context).size.width > 800;
+    final isDesktop = MediaQuery.of(context).size.width > 800;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
@@ -299,8 +305,8 @@ class _ResponsiveLayoutState extends State<ResponsiveLayout> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: isDark
-                    ? const Color(0xFF2C3E50).withOpacity(0.2)
-                    : const Color(0xFFB0C4DE).withOpacity(0.3),
+                    ? const Color(0xFF2C3E50).withValues(alpha: 0.2)
+                    : const Color(0xFFB0C4DE).withValues(alpha: 0.3),
               ),
             ),
           ),
@@ -313,8 +319,8 @@ class _ResponsiveLayoutState extends State<ResponsiveLayout> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: isDark
-                    ? const Color(0xFF311B3B).withOpacity(0.2)
-                    : const Color(0xFFC8BBD4).withOpacity(0.2),
+                    ? const Color(0xFF311B3B).withValues(alpha: 0.2)
+                    : const Color(0xFFC8BBD4).withValues(alpha: 0.2),
               ),
             ),
           ),
@@ -359,8 +365,8 @@ class _ResponsiveLayoutState extends State<ResponsiveLayout> {
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: NavigationRail(
             backgroundColor: isDark
-                ? Colors.black.withOpacity(0.2)
-                : Colors.white.withOpacity(0.3),
+                ? Colors.black.withValues(alpha: 0.2)
+                : Colors.white.withValues(alpha: 0.3),
             selectedIndex: _selectedIndex,
             onDestinationSelected: _onItemTapped,
             labelType: NavigationRailLabelType.all,
@@ -379,13 +385,18 @@ class _ResponsiveLayoutState extends State<ResponsiveLayout> {
               color: isDark ? Colors.white54 : Colors.black54,
             ),
             indicatorColor: isDark
-                ? Colors.white.withOpacity(0.1)
-                : Colors.white.withOpacity(0.5),
+                ? Colors.white.withValues(alpha: 0.1)
+                : Colors.white.withValues(alpha: 0.5),
             destinations: const [
               NavigationRailDestination(
                 icon: Icon(Icons.home_outlined),
                 selectedIcon: Icon(Icons.home_rounded),
                 label: Text('Home'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.dashboard_outlined),
+                selectedIcon: Icon(Icons.dashboard_rounded),
+                label: Text('Dashboard'),
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.favorite_outline_rounded),
@@ -413,11 +424,11 @@ class _ResponsiveLayoutState extends State<ResponsiveLayout> {
     return Container(
       decoration: BoxDecoration(
         color: isDark
-            ? Colors.black.withOpacity(0.4)
-            : Colors.white.withOpacity(0.5),
+            ? Colors.black.withValues(alpha: 0.4)
+            : Colors.white.withValues(alpha: 0.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
             blurRadius: 20,
             offset: const Offset(0, -5),
           ),
@@ -447,6 +458,11 @@ class _ResponsiveLayoutState extends State<ResponsiveLayout> {
                 icon: Icon(Icons.home_outlined),
                 activeIcon: Icon(Icons.home_rounded),
                 label: 'Home',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.dashboard_outlined),
+                activeIcon: Icon(Icons.dashboard_rounded),
+                label: 'Dashboard',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.favorite_outline_rounded),
@@ -498,13 +514,13 @@ class HomeScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: isDark
-                          ? Colors.white.withOpacity(0.05)
-                          : Colors.white.withOpacity(0.4),
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : Colors.white.withValues(alpha: 0.4),
                       boxShadow: [
                         BoxShadow(
                           color: Theme.of(
                             context,
-                          ).colorScheme.primary.withOpacity(0.1),
+                          ).colorScheme.primary.withValues(alpha: 0.1),
                           blurRadius: 30,
                           offset: const Offset(0, 10),
                         ),
@@ -519,7 +535,7 @@ class HomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 32),
                 Text(
-                  "Aku di sini.\nKamu aman sekarang.",
+                  'Aku di sini.\nKamu aman sekarang.',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onSurface,
@@ -528,7 +544,7 @@ class HomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  "Tarik napas perlahan. Kami siap mendampingimu kapan pun kamu siap.",
+                  'Tarik napas perlahan. Kami siap mendampingimu kapan pun kamu siap.',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: isDark ? Colors.white70 : Colors.black54,
@@ -536,15 +552,80 @@ class HomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 48),
 
+                // AI Emotional Analysis Button (NEW)
+                GlassCard(
+                  onTap: () {
+                    // Navigate to the AI Assessment
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const Dass21Screen(),
+                      ),
+                    );
+                  },
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 24,
+                    horizontal: 24,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? const Color(0xFF1E3A8A)
+                              : const Color(0xFFD0E0FF),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Icon(
+                          Icons.psychology_rounded,
+                          color: isDark
+                              ? const Color(0xFF93C5FD)
+                              : const Color(0xFF1D4ED8),
+                          size: 32,
+                        ),
+                      ),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'AI Analysis',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Mulai asesmen dan analisis emosi',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: isDark ? Colors.white60 : Colors.black54,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 16,
+                        color: isDark ? Colors.white30 : Colors.black38,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+
                 // Primary Stabilization Button
                 GlassCard(
                   onTap: () {
                     final parentState = context
                         .findAncestorStateOfType<_ResponsiveLayoutState>();
                     if (parentState != null) {
-                      parentState.setState(() {
-                        parentState._selectedIndex = 1;
-                      });
+                      parentState._onItemTapped(1);
                     }
                   },
                   padding: const EdgeInsets.symmetric(
@@ -609,9 +690,7 @@ class HomeScreen extends StatelessWidget {
                     final parentState = context
                         .findAncestorStateOfType<_ResponsiveLayoutState>();
                     if (parentState != null) {
-                      parentState.setState(() {
-                        parentState._selectedIndex = 3;
-                      });
+                      parentState._onItemTapped(3);
                     }
                   },
                   padding: const EdgeInsets.symmetric(
@@ -695,35 +774,35 @@ class _TenangDuluScreenState extends State<TenangDuluScreen>
   late Animation<double> _breathingAnimation;
 
   BreathingMode _currentMode = BreathingMode.tenang;
-  String _breathingText = "Tarik napas...";
+  String _breathingText = 'Tarik napas...';
 
   int _currentGroundingStep = 0;
   bool _showGroundingInfo = false;
   final List<Map<String, dynamic>> _groundingSteps = [
     {
-      "icon": Icons.visibility_rounded,
-      "text":
-          "Sebutkan dalam hati 5 benda di sekitarmu yang berwarna biru atau yang menarik perhatianmu.",
+      'icon': Icons.visibility_rounded,
+      'text':
+          'Sebutkan dalam hati 5 benda di sekitarmu yang berwarna biru atau yang menarik perhatianmu.',
     },
     {
-      "icon": Icons.touch_app_rounded,
-      "text":
-          "Rasakan 4 benda di sekitarmu yang bisa kamu sentuh. Bagaimana teksturnya?",
+      'icon': Icons.touch_app_rounded,
+      'text':
+          'Rasakan 4 benda di sekitarmu yang bisa kamu sentuh. Bagaimana teksturnya?',
     },
     {
-      "icon": Icons.hearing_rounded,
-      "text":
-          "Dengarkan perlahan, sebutkan 3 suara berbeda yang bisa kamu dengar saat ini.",
+      'icon': Icons.hearing_rounded,
+      'text':
+          'Dengarkan perlahan, sebutkan 3 suara berbeda yang bisa kamu dengar saat ini.',
     },
     {
-      "icon": Icons.spa_rounded,
-      "text":
-          "Tarik napas perlahan, coba kenali 2 aroma yang bisa kamu cium baunya.",
+      'icon': Icons.spa_rounded,
+      'text':
+          'Tarik napas perlahan, coba kenali 2 aroma yang bisa kamu cium baunya.',
     },
     {
-      "icon": Icons.restaurant_rounded,
-      "text":
-          "Sebutkan 1 hal yang bisa kamu rasakan (kecap) di mulutmu saat ini.",
+      'icon': Icons.restaurant_rounded,
+      'text':
+          'Sebutkan 1 hal yang bisa kamu rasakan (kecap) di mulutmu saat ini.',
     },
   ];
 
@@ -762,9 +841,9 @@ class _TenangDuluScreenState extends State<TenangDuluScreen>
         final val = _breathingController.value;
         String newText;
         if (val < 4 / 10) {
-          newText = "Tarik napas...";
+          newText = 'Tarik napas...';
         } else {
-          newText = "Hembuskan perlahan...";
+          newText = 'Hembuskan perlahan...';
         }
         if (_breathingText != newText) {
           setState(() => _breathingText = newText);
@@ -798,13 +877,13 @@ class _TenangDuluScreenState extends State<TenangDuluScreen>
         final val = _breathingController.value;
         String newText;
         if (val < 4 / 16) {
-          newText = "Tarik napas...";
+          newText = 'Tarik napas...';
         } else if (val < 8 / 16) {
-          newText = "Tahan...";
+          newText = 'Tahan...';
         } else if (val < 12 / 16) {
-          newText = "Hembuskan perlahan...";
+          newText = 'Hembuskan perlahan...';
         } else {
-          newText = "Tahan...";
+          newText = 'Tahan...';
         }
         if (_breathingText != newText) {
           setState(() => _breathingText = newText);
@@ -866,7 +945,7 @@ class _TenangDuluScreenState extends State<TenangDuluScreen>
                     return Opacity(
                       opacity: value,
                       child: Text(
-                        "Ini bukan salahmu.",
+                        'Ini bukan salahmu.',
                         style: Theme.of(context).textTheme.headlineSmall
                             ?.copyWith(
                               color: isDark
@@ -886,7 +965,7 @@ class _TenangDuluScreenState extends State<TenangDuluScreen>
                       : Icons.volume_off_rounded,
                   color: isDark ? Colors.white70 : Colors.black54,
                 ),
-                tooltip: "Suara Latar (Ambient Audio)",
+                tooltip: 'Suara Latar (Ambient Audio)',
                 onPressed: () {
                   setState(() {
                     _isAmbientAudioOn = !_isAmbientAudioOn;
@@ -895,8 +974,8 @@ class _TenangDuluScreenState extends State<TenangDuluScreen>
                     SnackBar(
                       content: Text(
                         _isAmbientAudioOn
-                            ? "Suara latar diaktifkan"
-                            : "Suara latar dimatikan",
+                            ? 'Suara latar diaktifkan'
+                            : 'Suara latar dimatikan',
                       ),
                       duration: const Duration(seconds: 2),
                       behavior: SnackBarBehavior.floating,
@@ -917,81 +996,85 @@ class _TenangDuluScreenState extends State<TenangDuluScreen>
                 builder: (context, child) {
                   // To make it look more fluid, we modulate border radius
                   // based on animation value to create a slightly morphing shape
-                  double morphVal = _breathingAnimation.value;
-                return Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Glow effect
-                    Container(
-                      width: 220 * morphVal,
-                      height: 220 * morphVal,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: (isDark
-                                ? const Color(0xFF88A0A8)
-                                : const Color(0xFFA8C0C8))
-                            .withOpacity(0.15),
-                        boxShadow: [
-                          BoxShadow(
-                            color: (isDark
-                                    ? const Color(0xFF88A0A8)
-                                    : const Color(0xFFA8C0C8))
-                                .withOpacity(0.3),
-                            blurRadius: 40 * morphVal,
-                            spreadRadius: 10 * morphVal,
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Inner Shape
-                    Container(
-                      width: 140 * morphVal,
-                      height: 140 * morphVal,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isDark
-                            ? const Color(0xFF263238).withOpacity(0.9)
-                            : Colors.white.withOpacity(0.9),
-                        border: Border.all(
-                          color: const Color(0xFF88A0A8).withOpacity(0.4),
-                          width: 2,
+                  var morphVal = _breathingAnimation.value;
+                  return Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Glow effect
+                      Container(
+                        width: 220 * morphVal,
+                        height: 220 * morphVal,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color:
+                              (isDark
+                                      ? const Color(0xFF88A0A8)
+                                      : const Color(0xFFA8C0C8))
+                                  .withValues(alpha: 0.15),
+                          boxShadow: [
+                            BoxShadow(
+                              color:
+                                  (isDark
+                                          ? const Color(0xFF88A0A8)
+                                          : const Color(0xFFA8C0C8))
+                                      .withValues(alpha: 0.3),
+                              blurRadius: 40 * morphVal,
+                              spreadRadius: 10 * morphVal,
+                            ),
+                          ],
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 20,
-                            offset: const Offset(0, 5),
-                          ),
-                        ],
                       ),
-                      child: Center(
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 500),
-                          transitionBuilder:
-                              (Widget child, Animation<double> animation) {
-                                return FadeTransition(
-                                  opacity: animation,
-                                  child: child,
-                                );
-                              },
-                          child: Text(
-                            _breathingText,
-                            key: ValueKey<String>(_breathingText),
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: primaryColor,
+                      // Inner Shape
+                      Container(
+                        width: 140 * morphVal,
+                        height: 140 * morphVal,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: isDark
+                              ? const Color(0xFF263238).withValues(alpha: 0.9)
+                              : Colors.white.withValues(alpha: 0.9),
+                          border: Border.all(
+                            color: const Color(
+                              0xFF88A0A8,
+                            ).withValues(alpha: 0.4),
+                            width: 2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 20,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 500),
+                            transitionBuilder:
+                                (Widget child, Animation<double> animation) {
+                                  return FadeTransition(
+                                    opacity: animation,
+                                    child: child,
+                                  );
+                                },
+                            child: Text(
+                              _breathingText,
+                              key: ValueKey<String>(_breathingText),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: primaryColor,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                );
-              },
+                    ],
+                  );
+                },
+              ),
             ),
-          ),
           ),
           const SizedBox(height: 32),
 
@@ -1000,18 +1083,18 @@ class _TenangDuluScreenState extends State<TenangDuluScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _buildModePill(
-                "Tenang",
-                "4-6",
-                "Menenangkan saraf & fisik",
+                'Tenang',
+                '4-6',
+                'Menenangkan saraf & fisik',
                 BreathingMode.tenang,
                 isDark,
                 primaryColor,
               ),
               const SizedBox(width: 12),
               _buildModePill(
-                "Fokus",
-                "Box",
-                "Menjernihkan pikiran & mental",
+                'Fokus',
+                'Box',
+                'Menjernihkan pikiran & mental',
                 BreathingMode.fokus,
                 isDark,
                 primaryColor,
@@ -1026,7 +1109,7 @@ class _TenangDuluScreenState extends State<TenangDuluScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                "Teknik Grounding 5-4-3-2-1",
+                'Teknik Grounding 5-4-3-2-1',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -1058,7 +1141,7 @@ class _TenangDuluScreenState extends State<TenangDuluScreen>
             secondChild: Padding(
               padding: const EdgeInsets.only(bottom: 16.0),
               child: Text(
-                "Teknik ini membantumu kembali ke momen saat ini dengan mengalihkan fokus dari kepanikan ke sekitarmu menggunakan 5 indera secara berurutan. Ikuti langkah di bawah ini perlahan-lahan.",
+                'Teknik ini membantumu kembali ke momen saat ini dengan mengalihkan fokus dari kepanikan ke sekitarmu menggunakan 5 indera secara berurutan. Ikuti langkah di bawah ini perlahan-lahan.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
@@ -1097,19 +1180,19 @@ class _TenangDuluScreenState extends State<TenangDuluScreen>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    _groundingSteps[_currentGroundingStep]["icon"],
+                    _groundingSteps[_currentGroundingStep]['icon'],
                     size: 48,
-                    color: primaryColor.withOpacity(0.8),
+                    color: primaryColor.withValues(alpha: 0.8),
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    _groundingSteps[_currentGroundingStep]["text"],
+                    _groundingSteps[_currentGroundingStep]['text'],
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 16,
                       height: 1.5,
                       color: isDark
-                          ? Colors.white.withOpacity(0.9)
+                          ? Colors.white.withValues(alpha: 0.9)
                           : Colors.black87,
                     ),
                   ),
@@ -1120,7 +1203,7 @@ class _TenangDuluScreenState extends State<TenangDuluScreen>
                     child: ElevatedButton(
                       onPressed: _nextGroundingStep,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor.withOpacity(0.1),
+                        backgroundColor: primaryColor.withValues(alpha: 0.1),
                         foregroundColor: primaryColor,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
@@ -1128,7 +1211,7 @@ class _TenangDuluScreenState extends State<TenangDuluScreen>
                         ),
                       ),
                       child: const Text(
-                        "Sudah",
+                        'Sudah',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -1166,14 +1249,14 @@ class _TenangDuluScreenState extends State<TenangDuluScreen>
             child: TextButton(
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Membuka rute darurat...")),
+                  const SnackBar(content: Text('Membuka rute darurat...')),
                 );
               },
               style: TextButton.styleFrom(
                 foregroundColor: isDark ? Colors.red[300] : Colors.red[700],
               ),
               child: const Text(
-                "Masih merasa panik? Hubungi bantuan darurat.",
+                'Masih merasa panik? Hubungi bantuan darurat.',
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
@@ -1184,7 +1267,7 @@ class _TenangDuluScreenState extends State<TenangDuluScreen>
     );
   }
 
-   Widget _buildModePill(
+  Widget _buildModePill(
     String title,
     String subtitle,
     String description,
@@ -1204,8 +1287,8 @@ class _TenangDuluScreenState extends State<TenangDuluScreen>
           color: isSelected
               ? primaryColor
               : (isDark
-                    ? Colors.white.withOpacity(0.05)
-                    : Colors.black.withOpacity(0.05)),
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.black.withValues(alpha: 0.05)),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected
@@ -1231,10 +1314,13 @@ class _TenangDuluScreenState extends State<TenangDuluScreen>
                 ),
                 const SizedBox(width: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 5,
+                    vertical: 1,
+                  ),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? Colors.white.withOpacity(0.2)
+                        ? Colors.white.withValues(alpha: 0.2)
                         : (isDark ? Colors.white12 : Colors.black12),
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -1257,7 +1343,9 @@ class _TenangDuluScreenState extends State<TenangDuluScreen>
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 10,
-                  color: isSelected ? Colors.white.withOpacity(0.9) : Colors.transparent,
+                  color: isSelected
+                      ? Colors.white.withValues(alpha: 0.9)
+                      : Colors.transparent,
                   height: 1.2,
                 ),
               ),
@@ -1282,9 +1370,9 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final List<Map<String, dynamic>> _messages = [
     {
-      "isUser": false,
-      "text":
-          "Halo, aku Safea. Kamu aman bersamaku. Apa yang ingin kamu bagikan hari ini?",
+      'isUser': false,
+      'text':
+          'Halo, aku Safea. Kamu aman bersamaku. Apa yang ingin kamu bagikan hari ini?',
     },
   ];
 
@@ -1295,7 +1383,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (text.trim().isEmpty) return;
 
     setState(() {
-      _messages.add({"isUser": true, "text": text});
+      _messages.add({'isUser': true, 'text': text});
       _textController.clear();
       _scrollToBottom();
 
@@ -1303,9 +1391,9 @@ class _ChatScreenState extends State<ChatScreen> {
         if (mounted) {
           setState(() {
             _messages.add({
-              "isUser": false,
-              "text":
-                  "Aku mendengarmu. Pelan-pelan saja. Bernapaslah bersamaku jika kamu merasa cemas.",
+              'isUser': false,
+              'text':
+                  'Aku mendengarmu. Pelan-pelan saja. Bernapaslah bersamaku jika kamu merasa cemas.',
             });
             _scrollToBottom();
           });
@@ -1342,7 +1430,7 @@ class _ChatScreenState extends State<ChatScreen> {
             itemCount: _messages.length,
             itemBuilder: (context, index) {
               final message = _messages[index];
-              final isUser = message["isUser"] as bool;
+              final isUser = message['isUser'] as bool;
               return Align(
                 alignment: isUser
                     ? Alignment.centerRight
@@ -1360,8 +1448,8 @@ class _ChatScreenState extends State<ChatScreen> {
                     color: isUser
                         ? Theme.of(context).colorScheme.primary
                         : (isDark
-                              ? Colors.black.withOpacity(0.4)
-                              : Colors.white.withOpacity(0.7)),
+                              ? Colors.black.withValues(alpha: 0.4)
+                              : Colors.white.withValues(alpha: 0.7)),
                     borderRadius: BorderRadius.circular(20).copyWith(
                       bottomRight: isUser
                           ? const Radius.circular(4)
@@ -1377,14 +1465,16 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(isUser ? 0.1 : 0.05),
+                        color: Colors.black.withValues(
+                          alpha: isUser ? 0.1 : 0.05,
+                        ),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
                     ],
                   ),
                   child: Text(
-                    message["text"],
+                    message['text'],
                     style: TextStyle(
                       color: isUser
                           ? Colors.white
@@ -1405,11 +1495,11 @@ class _ChatScreenState extends State<ChatScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
           child: Row(
             children: [
-              _buildQuickReplyChip("Aku bingung harus apa", isDark),
+              _buildQuickReplyChip('Aku bingung harus apa', isDark),
               const SizedBox(width: 8),
-              _buildQuickReplyChip("Tolong temani aku", isDark),
+              _buildQuickReplyChip('Tolong temani aku', isDark),
               const SizedBox(width: 8),
-              _buildQuickReplyChip("Aku merasa panik", isDark),
+              _buildQuickReplyChip('Aku merasa panik', isDark),
             ],
           ),
         ),
@@ -1427,8 +1517,8 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
               decoration: BoxDecoration(
                 color: isDark
-                    ? Colors.black.withOpacity(0.2)
-                    : Colors.white.withOpacity(0.5),
+                    ? Colors.black.withValues(alpha: 0.2)
+                    : Colors.white.withValues(alpha: 0.5),
                 border: Border(
                   top: BorderSide(
                     color: isDark ? Colors.white10 : Colors.white,
@@ -1444,7 +1534,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         color: Theme.of(context).colorScheme.onSurface,
                       ),
                       decoration: InputDecoration(
-                        hintText: "Ketik pesanmu...",
+                        hintText: 'Ketik pesanmu...',
                         hintStyle: TextStyle(
                           color: isDark ? Colors.white38 : Colors.black45,
                         ),
@@ -1454,8 +1544,8 @@ class _ChatScreenState extends State<ChatScreen> {
                         ),
                         filled: true,
                         fillColor: isDark
-                            ? Colors.white.withOpacity(0.1)
-                            : Colors.white.withOpacity(0.6),
+                            ? Colors.white.withValues(alpha: 0.1)
+                            : Colors.white.withValues(alpha: 0.6),
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 24,
                           vertical: 14,
@@ -1469,7 +1559,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     onTap: () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text("Voice Note feature coming soon"),
+                          content: Text('Voice Note feature coming soon'),
                           behavior: SnackBarBehavior.floating,
                         ),
                       );
@@ -1479,8 +1569,8 @@ class _ChatScreenState extends State<ChatScreen> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: isDark
-                            ? Colors.white.withOpacity(0.05)
-                            : Colors.black.withOpacity(0.05),
+                            ? Colors.white.withValues(alpha: 0.05)
+                            : Colors.black.withValues(alpha: 0.05),
                       ),
                       child: Icon(
                         Icons.mic_rounded,
@@ -1501,7 +1591,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           BoxShadow(
                             color: Theme.of(
                               context,
-                            ).colorScheme.primary.withOpacity(0.3),
+                            ).colorScheme.primary.withValues(alpha: 0.3),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -1534,12 +1624,12 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       onPressed: () => _sendMessage(text),
       backgroundColor: isDark
-          ? Colors.white.withOpacity(0.05)
-          : Colors.white.withOpacity(0.5),
+          ? Colors.white.withValues(alpha: 0.05)
+          : Colors.white.withValues(alpha: 0.5),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
         side: BorderSide(
-          color: isDark ? Colors.white12 : Colors.white.withOpacity(0.8),
+          color: isDark ? Colors.white12 : Colors.white.withValues(alpha: 0.8),
         ),
       ),
       elevation: 0,
@@ -1563,14 +1653,14 @@ class _VaultScreenState extends State<VaultScreen> {
   final TextEditingController _pinController = TextEditingController();
 
   void _unlockVault() {
-    if (_pinController.text == "1234") {
+    if (_pinController.text == '1234') {
       setState(() {
         _isUnlocked = true;
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text("PIN Salah (Gunakan 1234)"),
+          content: const Text('PIN Salah (Gunakan 1234)'),
           backgroundColor: Theme.of(context).colorScheme.error,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -1612,12 +1702,12 @@ class _VaultScreenState extends State<VaultScreen> {
                 ),
                 const SizedBox(height: 32),
                 const Text(
-                  "Brankas Rahasia",
+                  'Brankas Rahasia',
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "Masukkan PIN untuk membuka",
+                  'Masukkan PIN untuk membuka',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 15,
@@ -1636,15 +1726,15 @@ class _VaultScreenState extends State<VaultScreen> {
                     color: Theme.of(context).colorScheme.onSurface,
                   ),
                   decoration: InputDecoration(
-                    hintText: "••••",
+                    hintText: '••••',
                     hintStyle: TextStyle(
                       letterSpacing: 16,
                       color: isDark ? Colors.white24 : Colors.black26,
                     ),
                     filled: true,
                     fillColor: isDark
-                        ? Colors.white.withOpacity(0.05)
-                        : Colors.white.withOpacity(0.6),
+                        ? Colors.white.withValues(alpha: 0.05)
+                        : Colors.white.withValues(alpha: 0.6),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide.none,
@@ -1667,7 +1757,7 @@ class _VaultScreenState extends State<VaultScreen> {
                     elevation: 0,
                   ),
                   child: const Text(
-                    "Buka Brankas",
+                    'Buka Brankas',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -1685,7 +1775,7 @@ class _VaultScreenState extends State<VaultScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Text(
-            "Brankas Bukti",
+            'Brankas Bukti',
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.w800,
@@ -1694,7 +1784,7 @@ class _VaultScreenState extends State<VaultScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            "Semua data di sini tersimpan aman dan terenkripsi secara lokal di perangkatmu.",
+            'Semua data di sini tersimpan aman dan terenkripsi secara lokal di perangkatmu.',
             style: TextStyle(
               fontSize: 15,
               color: isDark ? Colors.white60 : Colors.black54,
@@ -1708,7 +1798,7 @@ class _VaultScreenState extends State<VaultScreen> {
               Expanded(
                 child: _buildActionCard(
                   icon: Icons.edit_document,
-                  title: "Catat\nKronologi",
+                  title: 'Catat\nKronologi',
                   color: isDark
                       ? const Color(0xFF263238)
                       : const Color(0xFFE8F0F2),
@@ -1721,7 +1811,7 @@ class _VaultScreenState extends State<VaultScreen> {
               Expanded(
                 child: _buildActionCard(
                   icon: Icons.mic_rounded,
-                  title: "Rekam\nSuara",
+                  title: 'Rekam\nSuara',
                   color: isDark
                       ? const Color(0xFF312844)
                       : const Color(0xFFF3E5F5),
@@ -1736,14 +1826,14 @@ class _VaultScreenState extends State<VaultScreen> {
           const SizedBox(height: 48),
 
           const Text(
-            "Butuh Bantuan Segera?",
+            'Butuh Bantuan Segera?',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
 
           _buildQuickDialButton(
-            title: "Hubungi SAPA 129",
-            subtitle: "Layanan Sahabat Perempuan dan Anak",
+            title: 'Hubungi SAPA 129',
+            subtitle: 'Layanan Sahabat Perempuan dan Anak',
             icon: Icons.support_agent_rounded,
             color: isDark ? const Color(0xFF4A1A1A) : const Color(0xFFFDE8E8),
             textColor: isDark
@@ -1753,12 +1843,12 @@ class _VaultScreenState extends State<VaultScreen> {
           ),
           const SizedBox(height: 12),
           _buildQuickDialButton(
-            title: "Panduan Hukum Dasar",
-            subtitle: "Ketahui hak-hakmu",
+            title: 'Panduan Hukum Dasar',
+            subtitle: 'Ketahui hak-hakmu',
             icon: Icons.gavel_rounded,
             color: isDark
-                ? Colors.white.withOpacity(0.05)
-                : Colors.white.withOpacity(0.5),
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.white.withValues(alpha: 0.5),
             textColor: isDark ? Colors.white70 : Colors.black87,
             isDark: isDark,
           ),
@@ -1822,7 +1912,7 @@ class _VaultScreenState extends State<VaultScreen> {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(isDark ? 0.2 : 0.02),
+                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -1849,7 +1939,7 @@ class _VaultScreenState extends State<VaultScreen> {
                       subtitle,
                       style: TextStyle(
                         fontSize: 13,
-                        color: textColor.withOpacity(0.8),
+                        color: textColor.withValues(alpha: 0.8),
                       ),
                     ),
                   ],
@@ -1858,7 +1948,7 @@ class _VaultScreenState extends State<VaultScreen> {
               Icon(
                 Icons.arrow_forward_ios_rounded,
                 size: 16,
-                color: textColor.withOpacity(0.5),
+                color: textColor.withValues(alpha: 0.5),
               ),
             ],
           ),
