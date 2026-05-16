@@ -33,11 +33,15 @@ FROM nginx:alpine
 # Copy the build output to the Nginx html directory
 COPY --from=build /app/build/web /usr/share/nginx/html
 
-# Expose port 8080 (Cloud Run default)
-EXPOSE 8080
+# Copy a custom nginx template to handle the PORT environment variable
+RUN printf 'server {\n\
+    listen %s;\n\
+    location / {\n\
+        root   /usr/share/nginx/html;\n\
+        index  index.html index.htm;\n\
+        try_files $uri $uri/ /index.html;\n\
+    }\n\
+}\n' '$PORT' > /etc/nginx/conf.d/default.conf.template
 
-# Configure Nginx to listen on 8080
-RUN sed -i 's/listen       80;/listen       8080;/g' /etc/nginx/conf.d/default.conf
-
-# Start Nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Use a custom entrypoint to substitute the PORT variable
+CMD ["/bin/sh", "-c", "envsubst < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"]
