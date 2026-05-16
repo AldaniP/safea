@@ -11,8 +11,8 @@ RUN apt-get update && apt-get install -y \
     python3 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Flutter
-RUN git clone https://github.com/flutter/flutter.git /usr/local/flutter
+# Install Flutter stable (avoiding master branch potential issues)
+RUN git clone -b stable https://github.com/flutter/flutter.git /usr/local/flutter
 ENV PATH="/usr/local/flutter/bin:/usr/local/flutter/bin/cache/dart-sdk/bin:${PATH}"
 RUN flutter doctor
 RUN flutter config --enable-web
@@ -25,6 +25,7 @@ COPY . .
 
 # Fetch dependencies and build web
 RUN flutter pub get
+# Use --no-pub to avoid extra network calls, build for release
 RUN flutter build web --release
 
 # Stage 2: Serve the application using Nginx
