@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
     python3 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Flutter stable (avoiding master branch potential issues)
+# Install Flutter stable
 RUN git clone -b stable https://github.com/flutter/flutter.git /usr/local/flutter
 ENV PATH="/usr/local/flutter/bin:/usr/local/flutter/bin/cache/dart-sdk/bin:${PATH}"
 RUN flutter doctor
@@ -25,24 +25,34 @@ COPY . .
 
 # Fetch dependencies and build web
 RUN flutter pub get
-# Use --no-pub to avoid extra network calls, build for release
-RUN flutter build web --release
+# Build for release with CanvasKit for better performance, or auto
+RUN flutter build web --release --web-renderer canvaskit
 
 # Stage 2: Serve the application using Nginx
 FROM nginx:alpine
 
+# Install envsubst (included in alpine) and bash for script
+RUN apk add --no-cache bash
+
 # Copy the build output to the Nginx html directory
 COPY --from=build /app/build/web /usr/share/nginx/html
 
-# Copy a custom nginx template to handle the PORT environment variable
+# Create a robust nginx configuration
 RUN printf 'server {\n\
     listen %s;\n\
+    server_name localhost;\n\
+    root /usr/share/nginx/html;\n\
+    index index.html;\n\
     location / {\n\
-        root   /usr/share/nginx/html;\n\
-        index  index.html index.htm;\n\
         try_files $uri $uri/ /index.html;\n\
+    }\n\
+    # Caching for static assets\n\
+    location ~* \.(?:css|js|jpg|jpeg|gif|png|ico|cur|gz|svg|svgz|mp4|ogg|ogv|webm|htc)$ {\n\
+        expires 1M;\n\
+        access_log off;\n\
+        add_header Cache-Control "public";\n\
     }\n\
 }\n' '$PORT' > /etc/nginx/conf.d/default.conf.template
 
-# Use a custom entrypoint to substitute the PORT variable
-CMD ["/bin/sh", "-c", "envsubst < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"]
+# Start command to substitute port and run nginx
+CMD ["/bin/sh", "-c", "envsubst '$PORT' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"]
