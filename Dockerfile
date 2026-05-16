@@ -23,36 +23,31 @@ WORKDIR /app
 # Copy project files
 COPY . .
 
-# Fetch dependencies and build web
+# Fetch dependencies
 RUN flutter pub get
-# Build for release with CanvasKit for better performance, or auto
-RUN flutter build web --release --web-renderer canvaskit
+
+# Build for release (removing --web-renderer as it caused issues in some environments, defaulting to auto)
+RUN flutter build web --release
 
 # Stage 2: Serve the application using Nginx
 FROM nginx:alpine
 
-# Install envsubst (included in alpine) and bash for script
+# Install bash for script support
 RUN apk add --no-cache bash
 
 # Copy the build output to the Nginx html directory
 COPY --from=build /app/build/web /usr/share/nginx/html
 
-# Create a robust nginx configuration
-RUN printf 'server {\n\
-    listen %s;\n\
-    server_name localhost;\n\
-    root /usr/share/nginx/html;\n\
-    index index.html;\n\
-    location / {\n\
-        try_files $uri $uri/ /index.html;\n\
-    }\n\
-    # Caching for static assets\n\
-    location ~* \.(?:css|js|jpg|jpeg|gif|png|ico|cur|gz|svg|svgz|mp4|ogg|ogv|webm|htc)$ {\n\
-        expires 1M;\n\
-        access_log off;\n\
-        add_header Cache-Control "public";\n\
-    }\n\
-}\n' '$PORT' > /etc/nginx/conf.d/default.conf.template
+# Create nginx configuration template
+RUN echo 'server {' > /etc/nginx/conf.d/default.conf.template && \
+    echo '    listen ${PORT};' >> /etc/nginx/conf.d/default.conf.template && \
+    echo '    server_name localhost;' >> /etc/nginx/conf.d/default.conf.template && \
+    echo '    root /usr/share/nginx/html;' >> /etc/nginx/conf.d/default.conf.template && \
+    echo '    index index.html;' >> /etc/nginx/conf.d/default.conf.template && \
+    echo '    location / {' >> /etc/nginx/conf.d/default.conf.template && \
+    echo '        try_files $uri $uri/ /index.html;' >> /etc/nginx/conf.d/default.conf.template && \
+    echo '    }' >> /etc/nginx/conf.d/default.conf.template && \
+    echo '}' >> /etc/nginx/conf.d/default.conf.template
 
 # Start command to substitute port and run nginx
-CMD ["/bin/sh", "-c", "envsubst '$PORT' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"]
+CMD ["/bin/sh", "-c", "envsubst '${PORT}' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"]
