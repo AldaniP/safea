@@ -2,20 +2,22 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class VaultService {
+import 'package:flutter/foundation.dart';
+
+class VaultService extends ChangeNotifier {
   static const String _planKey = 'safea_safety_plan';
   static const String _pinKey = 'safea_vault_pin';
   static const String _notesKey = 'safea_vault_notes';
 
-  static SharedPreferences? _prefs;
+  SharedPreferences? _prefs;
 
-  static Future<void> init() async {
+  Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
   }
 
   // --- Safety Plan ---
 
-  static Map<String, dynamic> getSafetyPlan() {
+  Map<String, dynamic> getSafetyPlan() {
     final data = _prefs?.getString(_planKey);
     if (data != null) {
       try {
@@ -50,26 +52,28 @@ class VaultService {
     return defaultPlan;
   }
 
-  static Future<void> saveSafetyPlan(Map<String, dynamic> plan) async {
+  Future<void> saveSafetyPlan(Map<String, dynamic> plan) async {
     await _prefs?.setString(_planKey, jsonEncode(plan));
+    notifyListeners();
   }
 
   // --- Vault ---
 
-  static bool isVaultSetup() {
+  bool isVaultSetup() {
     return _prefs?.containsKey(_pinKey) ?? false;
   }
 
-  static Future<void> setupVault(String pin) async {
+  Future<void> setupVault(String pin) async {
     await _prefs?.setString(_pinKey, pin);
     await _prefs?.setString(_notesKey, jsonEncode([]));
+    notifyListeners();
   }
 
-  static bool verifyPin(String pin) {
+  bool verifyPin(String pin) {
     return _prefs?.getString(_pinKey) == pin;
   }
 
-  static List<Map<String, dynamic>> getNotes() {
+  List<Map<String, dynamic>> getNotes() {
     final data = _prefs?.getString(_notesKey);
     if (data != null) {
       try {
@@ -80,7 +84,7 @@ class VaultService {
     return [];
   }
 
-  static Future<bool> addNote(
+  Future<bool> addNote(
     String content, [
     Map<String, dynamic>? file,
   ]) async {
@@ -98,14 +102,17 @@ class VaultService {
 
     try {
       await _prefs?.setString(_notesKey, jsonEncode(notes));
+      notifyListeners();
       return true;
     } catch (e) {
       return false; // Storage full or encoding failed
     }
   }
 
-  static Future<void> panicWipe() async {
+  Future<void> panicWipe() async {
     await _prefs?.remove(_pinKey);
+    notifyListeners();
     await _prefs?.setString(_notesKey, jsonEncode([]));
+    notifyListeners();
   }
 }

@@ -1,3 +1,4 @@
+import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -33,7 +34,7 @@ class ConsultationScreen extends StatelessWidget {
   ];
 
   void _handleSchedule(BuildContext context, Map<String, dynamic> prof) async {
-    await RemindersService.addReminder({
+    await context.read<RemindersService>().addReminder({
       'title': 'Konsultasi dengan ${prof['name']}',
       'time': prof['availability'],
       'type': 'assessment',
@@ -41,7 +42,7 @@ class ConsultationScreen extends StatelessWidget {
       'actionLink': '/consultation',
     });
 
-    await ProfileService.updateProfile({
+    await context.read<ProfileService>().updateProfile({
       'lastSession': {
         'date': DateTime.now().toIso8601String(),
         'doctor': prof['name'],

@@ -1,3 +1,4 @@
+import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
@@ -28,7 +29,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
 
   void _loadHistory() {
     setState(() {
-      _history = AnalysisService.getAnalysisHistory().reversed.toList();
+      _history = context.read<AnalysisService>().getAnalysisHistory().reversed.toList();
     });
   }
 
@@ -87,7 +88,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
           .trim();
       final parsedJSON = json.decode(cleanedJSON) as Map<String, dynamic>;
 
-      await AnalysisService.saveAnalysisRecord({
+      await context.read<AnalysisService>().saveAnalysisRecord({
         'text': _textController.text,
         'analysisResult': parsedJSON,
       });
@@ -116,7 +117,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             'Disarankan untuk mengambil jeda sejenak dari rutinitas kerja dan melakukan sesi relaksasi mendalam.',
       };
 
-      await AnalysisService.saveAnalysisRecord({
+      await context.read<AnalysisService>().saveAnalysisRecord({
         'text': _textController.text,
         'analysisResult': fallbackRes,
       });

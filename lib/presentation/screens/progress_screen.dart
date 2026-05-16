@@ -1,3 +1,4 @@
+import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../data/analysis_service.dart';
@@ -10,8 +11,6 @@ class ProgressScreen extends StatefulWidget {
 }
 
 class _ProgressScreenState extends State<ProgressScreen> {
-  List<Map<String, dynamic>> _chartData = [];
-
   final List<Map<String, dynamic>> _fallbackData = [
     {'name': 'Senin', 'stress': 65.0, 'anxiety': 40.0, 'mood': 75.0},
     {'name': 'Selasa', 'stress': 70.0, 'anxiety': 45.0, 'mood': 65.0},
@@ -22,14 +21,8 @@ class _ProgressScreenState extends State<ProgressScreen> {
     {'name': 'Minggu', 'stress': 25.0, 'anxiety': 10.0, 'mood': 90.0},
   ];
 
-  @override
-  void initState() {
-    super.initState();
-    _loadData();
-  }
-
-  void _loadData() {
-    final history = AnalysisService.getAnalysisHistory();
+  List<Map<String, dynamic>> _getChartData(BuildContext context) {
+    final history = context.watch<AnalysisService>().getAnalysisHistory();
     if (history.isNotEmpty) {
       final plottedData = history.map((record) {
         double stress = 50.0;
@@ -59,20 +52,19 @@ class _ProgressScreenState extends State<ProgressScreen> {
         };
       }).toList();
 
-      setState(() {
-        _chartData = plottedData.length > 7
-            ? plottedData.sublist(plottedData.length - 7)
-            : plottedData;
-      });
+      return plottedData.length > 7
+          ? plottedData.sublist(plottedData.length - 7)
+          : plottedData;
     } else {
-      setState(() {
-        _chartData = _fallbackData;
-      });
+      return []; // Return empty data to show dynamic state properly as per prompt "replace hardcoded values with data". But if fallback is needed, we can use _fallbackData. Let's use empty or fallback. Actually the prompt says "Replace hardcoded values with data from the analysis... Ensure all features work as intended". Let's use empty to truly reflect dynamic data, or fallback if empty.
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final chartData = _getChartData(context);
+    // If no real data, we can fallback or show empty. Let's use _fallbackData for now if empty to avoid breaking layout, but prompt says "replace hardcoded values". So let's show an empty message if no data.
+
     return Scaffold(
       body: SafeArea(
         child: ListView(
@@ -80,26 +72,34 @@ class _ProgressScreenState extends State<ProgressScreen> {
           children: [
             _buildHeader(context),
             const SizedBox(height: 32),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                if (constraints.maxWidth > 800) {
-                  return Row(
+            if (chartData.isEmpty)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(32.0),
+                  child: Text('Belum ada data analisis. Lakukan asesmen untuk melihat progress.'),
+                ),
+              )
+            else
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  if (constraints.maxWidth > 800) {
+                    return Row(
+                      children: [
+                        Expanded(child: _buildLineChart(context, chartData)),
+                        const SizedBox(width: 24),
+                        Expanded(child: _buildBarChart(context, chartData)),
+                      ],
+                    );
+                  }
+                  return Column(
                     children: [
-                      Expanded(child: _buildLineChart(context)),
-                      const SizedBox(width: 24),
-                      Expanded(child: _buildBarChart(context)),
+                      _buildLineChart(context, chartData),
+                      const SizedBox(height: 24),
+                      _buildBarChart(context, chartData),
                     ],
                   );
-                }
-                return Column(
-                  children: [
-                    _buildLineChart(context),
-                    const SizedBox(height: 24),
-                    _buildBarChart(context),
-                  ],
-                );
-              },
-            ),
+                },
+              ),
           ],
         ),
       ),
@@ -111,22 +111,22 @@ class _ProgressScreenState extends State<ProgressScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Pelacakan Mingguan',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+          'Progress & Analisis',
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          'Lihat perkembangan kesehatan mentalmu dari waktu ke waktu secara komprehensif.',
+          'Pantau perkembangan kesehatan mentalmu dari waktu ke waktu secara komprehensif.',
           style: Theme.of(context).textTheme.bodyMedium,
         ),
       ],
     );
   }
 
-  Widget _buildLineChart(BuildContext context) {
+  Widget _buildLineChart(BuildContext context, List<Map<String, dynamic>> chartData) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -175,12 +175,13 @@ class _ProgressScreenState extends State<ProgressScreen> {
                         reservedSize: 30,
                         getTitlesWidget: (value, meta) {
                           if (value.toInt() < 0 ||
-                              value.toInt() >= _chartData.length)
+                              value.toInt() >= chartData.length) {
                             return const SizedBox.shrink();
+                          }
                           return Padding(
                             padding: const EdgeInsets.only(top: 8.0),
                             child: Text(
-                              _chartData[value.toInt()]['name'],
+                              chartData[value.toInt()]['name'],
                               style: const TextStyle(
                                 color: Colors.grey,
                                 fontSize: 12,
@@ -208,12 +209,12 @@ class _ProgressScreenState extends State<ProgressScreen> {
                   ),
                   borderData: FlBorderData(show: false),
                   minX: 0,
-                  maxX: (_chartData.length - 1).toDouble(),
+                  maxX: (chartData.length - 1).toDouble() < 0 ? 0 : (chartData.length - 1).toDouble(),
                   minY: 0,
                   maxY: 100,
                   lineBarsData: [
                     LineChartBarData(
-                      spots: _chartData
+                      spots: chartData
                           .asMap()
                           .entries
                           .map(
@@ -228,7 +229,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                       belowBarData: BarAreaData(show: false),
                     ),
                     LineChartBarData(
-                      spots: _chartData
+                      spots: chartData
                           .asMap()
                           .entries
                           .map(
@@ -261,7 +262,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
     );
   }
 
-  Widget _buildBarChart(BuildContext context) {
+  Widget _buildBarChart(BuildContext context, List<Map<String, dynamic>> chartData) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -310,12 +311,13 @@ class _ProgressScreenState extends State<ProgressScreen> {
                         reservedSize: 30,
                         getTitlesWidget: (value, meta) {
                           if (value.toInt() < 0 ||
-                              value.toInt() >= _chartData.length)
+                              value.toInt() >= chartData.length) {
                             return const SizedBox.shrink();
+                          }
                           return Padding(
                             padding: const EdgeInsets.only(top: 8.0),
                             child: Text(
-                              _chartData[value.toInt()]['name'],
+                              chartData[value.toInt()]['name'],
                               style: const TextStyle(
                                 color: Colors.grey,
                                 fontSize: 12,
@@ -343,7 +345,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                   ),
                   borderData: FlBorderData(show: false),
                   maxY: 100,
-                  barGroups: _chartData.asMap().entries.map((e) {
+                  barGroups: chartData.asMap().entries.map((e) {
                     return BarChartGroupData(
                       x: e.key,
                       barRods: [

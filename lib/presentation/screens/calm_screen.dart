@@ -1,3 +1,4 @@
+import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -74,7 +75,7 @@ class _CalmScreenState extends State<CalmScreen>
   }
 
   void _handleFinish() async {
-    await ProfileService.addPoints(20);
+    await context.read<ProfileService>().addPoints(20);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

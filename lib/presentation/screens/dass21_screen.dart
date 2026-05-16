@@ -1,3 +1,4 @@
+import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -254,8 +255,8 @@ class _Dass21ScreenState extends State<Dass21Screen> {
 
   void _handleFinish() async {
     final res = _calculateResults();
-    await ProfileService.addPoints(100);
-    await ProfileService.updateProfile({'lastScore': res['wellbeing']});
+    await context.read<ProfileService>().addPoints(100);
+    await context.read<ProfileService>().updateProfile({'lastScore': res['wellbeing']});
     setState(() {
       _step = 'result';
     });

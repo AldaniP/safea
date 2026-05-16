@@ -2,15 +2,17 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class CommunityService {
-  static const String _key = 'safea_community_posts';
-  static SharedPreferences? _prefs;
+import 'package:flutter/foundation.dart';
 
-  static Future<void> init() async {
+class CommunityService extends ChangeNotifier {
+  static const String _key = 'safea_community_posts';
+  SharedPreferences? _prefs;
+
+  Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
   }
 
-  static List<Map<String, dynamic>> getCommunityPosts() {
+  List<Map<String, dynamic>> getCommunityPosts() {
     final data = _prefs?.getString(_key);
     if (data != null) {
       try {
@@ -51,13 +53,14 @@ class CommunityService {
     return defaultPosts;
   }
 
-  static Future<void> saveCommunityPosts(
+  Future<void> saveCommunityPosts(
     List<Map<String, dynamic>> posts,
   ) async {
     await _prefs?.setString(_key, jsonEncode(posts));
+    notifyListeners();
   }
 
-  static Future<void> addCommunityPost(String content) async {
+  Future<void> addCommunityPost(String content) async {
     final posts = getCommunityPosts();
     final newPost = {
       'id': Random().nextInt(1000000).toString(),
@@ -69,7 +72,7 @@ class CommunityService {
     await saveCommunityPosts(posts);
   }
 
-  static Future<void> likePost(String id) async {
+  Future<void> likePost(String id) async {
     final posts = getCommunityPosts();
     final index = posts.indexWhere((p) => p['id'] == id);
     if (index != -1) {

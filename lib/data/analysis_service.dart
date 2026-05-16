@@ -2,15 +2,17 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class AnalysisService {
-  static const String _key = 'safea_analysis_history';
-  static SharedPreferences? _prefs;
+import 'package:flutter/foundation.dart';
 
-  static Future<void> init() async {
+class AnalysisService extends ChangeNotifier {
+  static const String _key = 'safea_analysis_history';
+  SharedPreferences? _prefs;
+
+  Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
   }
 
-  static List<Map<String, dynamic>> getAnalysisHistory() {
+  List<Map<String, dynamic>> getAnalysisHistory() {
     final data = _prefs?.getString(_key);
     if (data != null) {
       try {
@@ -21,7 +23,7 @@ class AnalysisService {
     return [];
   }
 
-  static Future<void> saveAnalysisRecord(Map<String, dynamic> record) async {
+  Future<void> saveAnalysisRecord(Map<String, dynamic> record) async {
     final history = getAnalysisHistory();
     final newRecord = {
       ...record,
@@ -30,9 +32,11 @@ class AnalysisService {
     };
     history.add(newRecord);
     await _prefs?.setString(_key, jsonEncode(history));
+    notifyListeners();
   }
 
-  static Future<void> clearAnalysisHistory() async {
+  Future<void> clearAnalysisHistory() async {
     await _prefs?.remove(_key);
+    notifyListeners();
   }
 }

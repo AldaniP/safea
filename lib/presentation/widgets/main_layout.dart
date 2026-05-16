@@ -1,3 +1,4 @@
+import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -39,7 +40,7 @@ class _MainLayoutState extends State<MainLayout> {
       builder: (context, constraints) {
         final isWide = constraints.maxWidth > 800;
         final currentLocation = GoRouterState.of(context).uri.path;
-        final profile = ProfileService.getProfile();
+        final profile = context.read<ProfileService>().getProfile();
 
         if (isWide) {
           return Scaffold(

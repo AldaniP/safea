@@ -25,7 +25,7 @@ class _AccountScreenState extends State<AccountScreen> {
   @override
   void initState() {
     super.initState();
-    _profileData = ProfileService.getProfile();
+    _profileData = context.read<ProfileService>().getProfile();
     _tempData = Map.from(_profileData);
   }
 
@@ -34,7 +34,7 @@ class _AccountScreenState extends State<AccountScreen> {
       _profileData = Map.from(_tempData);
       _isEditing = false;
     });
-    await ProfileService.updateProfile(_profileData);
+    await context.read<ProfileService>().updateProfile(_profileData);
   }
 
   void _handleCancel() {

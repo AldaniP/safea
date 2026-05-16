@@ -1,3 +1,4 @@
+import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -26,29 +27,14 @@ class _RelaxationScreenState extends State<RelaxationScreen> {
     },
   ];
 
-  List<Map<String, dynamic>> _roadmapSteps = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadRoadmap();
-  }
-
-  void _loadRoadmap() {
-    setState(() {
-      _roadmapSteps = RoadmapService.getRoadmap();
-    });
-  }
-
   void _toggleStep(int id) async {
-    final updated = await RoadmapService.toggleRoadmapStep(id);
-    setState(() {
-      _roadmapSteps = updated;
-    });
+    await context.read<RoadmapService>().toggleRoadmapStep(id);
   }
 
   @override
   Widget build(BuildContext context) {
+    final roadmapSteps = context.watch<RoadmapService>().getRoadmap();
+
     return Scaffold(
       body: SafeArea(
         child: ListView(
@@ -64,7 +50,7 @@ class _RelaxationScreenState extends State<RelaxationScreen> {
                     children: [
                       Expanded(flex: 4, child: _buildLeftColumn(context)),
                       const SizedBox(width: 32),
-                      Expanded(flex: 8, child: _buildRightColumn(context)),
+                      Expanded(flex: 8, child: _buildRightColumn(context, roadmapSteps)),
                     ],
                   );
                 }
@@ -72,7 +58,7 @@ class _RelaxationScreenState extends State<RelaxationScreen> {
                   children: [
                     _buildLeftColumn(context),
                     const SizedBox(height: 32),
-                    _buildRightColumn(context),
+                    _buildRightColumn(context, roadmapSteps),
                   ],
                 );
               },
@@ -102,8 +88,8 @@ class _RelaxationScreenState extends State<RelaxationScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Temukan kedamaian batin melalui roadmap relaksasi harian dan kata-kata positif.',
-          style: Theme.of(context).textTheme.bodyMedium,
+          'Ruang tenangmu untuk menemukan kembali fokus dan kedamaian.',
+          style: Theme.of(context).textTheme.bodyLarge,
         ),
       ],
     );
@@ -113,8 +99,26 @@ class _RelaxationScreenState extends State<RelaxationScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _buildActionCard(
+          context,
+          title: 'Latihan Pernapasan 4-7-8',
+          desc: 'Turunkan detak jantung dan kurangi kecemasan instan.',
+          icon: LucideIcons.wind,
+          color: const Color(0xFF818CF8),
+          onTap: () => context.go('/calm'),
+        ),
+        const SizedBox(height: 16),
+        _buildActionCard(
+          context,
+          title: 'Grounding 5-4-3-2-1',
+          desc: 'Tarik kembali fokusmu ke masa kini saat merasa panik.',
+          icon: LucideIcons.anchor,
+          color: const Color(0xFF34D399),
+          onTap: () {},
+        ),
+        const SizedBox(height: 32),
         const Text(
-          'Afirmasi Hari Ini',
+          'Afirmasi Harian',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -122,62 +126,145 @@ class _RelaxationScreenState extends State<RelaxationScreen> {
           ),
         ),
         const SizedBox(height: 16),
-        ..._affirmations.map(
-          (aff) => Padding(
-            padding: const EdgeInsets.only(bottom: 16.0),
+        ..._affirmations.map((a) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12.0),
             child: Card(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
               child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
                   children: [
-                    Icon(aff['icon'] as IconData, color: Colors.amber),
-                    const SizedBox(height: 16),
-                    Text(
-                      '"${aff['text']}"',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white70,
-                        height: 1.5,
+                    Icon(a['icon'] as IconData, color: Colors.amber),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Text(
+                        a['text'] as String,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontStyle: FontStyle.italic,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-          ),
-        ),
-        const SizedBox(height: 16),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildRightColumn(BuildContext context, List<Map<String, dynamic>> roadmapSteps) {
+    final completedCount = roadmapSteps.where((s) => s['completed'] as bool).length;
+    final totalSteps = roadmapSteps.length;
+    final progress = totalSteps > 0 ? completedCount / totalSteps : 0.0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         Card(
-          color: const Color(0xFF4F46E5), // indigo-600
           child: Padding(
             padding: const EdgeInsets.all(24.0),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Gabung Komunitas',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    fontSize: 18,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Roadmap Pemulihan',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Text(
+                      '$completedCount / $totalSteps Selesai',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Bagikan pencapaian relaksasi secara anonim tanpa menyebut detail trauma.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Color(0xFFC7D2FE), fontSize: 14),
-                ), // indigo-200
                 const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () => context.go('/community'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: const Color(0xFF4F46E5),
-                    minimumSize: const Size(double.infinity, 48),
-                  ),
-                  child: const Text('Lihat Cerita Anonim'),
+                LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 8,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                const SizedBox(height: 24),
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: roadmapSteps.length,
+                  separatorBuilder: (context, index) => const Divider(height: 24),
+                  itemBuilder: (context, index) {
+                    final step = roadmapSteps[index];
+                    final isCompleted = step['completed'] as bool;
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        InkWell(
+                          onTap: () => _toggleStep(step['id'] as int),
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: isCompleted
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Colors.grey,
+                                width: 2,
+                              ),
+                              color: isCompleted
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Colors.transparent,
+                            ),
+                            child: isCompleted
+                                ? const Icon(
+                                    Icons.check,
+                                    size: 20,
+                                    color: Colors.white,
+                                  )
+                                : null,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                step['title'] as String,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: isCompleted ? Colors.grey : Colors.white,
+                                  decoration: isCompleted
+                                      ? TextDecoration.lineThrough
+                                      : null,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                step['desc'] as String,
+                                style: TextStyle(
+                                  color: isCompleted ? Colors.grey : Colors.white70,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ],
             ),
@@ -187,160 +274,54 @@ class _RelaxationScreenState extends State<RelaxationScreen> {
     );
   }
 
-  Widget _buildRightColumn(BuildContext context) {
-    final completedCount = _roadmapSteps
-        .where((s) => s['completed'] as bool)
-        .length;
-    final progressPercent = _roadmapSteps.isEmpty
-        ? 0
-        : ((completedCount / _roadmapSteps.length) * 100).round();
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Roadmap Pemulihan',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Selesaikan tantangan harian untuk meningkatkan resilience Anda.',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ],
-                  ),
+  Widget _buildActionCard(
+    BuildContext context, {
+    required String title,
+    required String desc,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(24),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                child: Icon(icon, color: color, size: 28),
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'PROGRES MINGGU INI',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                    Text(
-                      '$progressPercent%',
+                      title,
                       style: const TextStyle(
-                        fontSize: 32,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
                     ),
+                    const SizedBox(height: 6),
+                    Text(
+                      desc,
+                      style: const TextStyle(color: Colors.white70, fontSize: 13),
+                    ),
                   ],
                 ),
-              ],
-            ),
-            const SizedBox(height: 48),
-            Stack(
-              children: [
-                Positioned(
-                  left: 23,
-                  top: 0,
-                  bottom: 0,
-                  child: Container(
-                    width: 2,
-                    color: Theme.of(context).dividerColor,
-                  ),
-                ),
-                Column(
-                  children: _roadmapSteps.map((step) {
-                    final isCompleted = step['completed'] as bool;
-                    return InkWell(
-                      onTap: () => _toggleStep(step['id'] as int),
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 32.0),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              margin: const EdgeInsets.only(top: 4),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.surface,
-                              ),
-                              child: Icon(
-                                isCompleted
-                                    ? LucideIcons.checkCircle2
-                                    : LucideIcons.circle,
-                                color: isCompleted
-                                    ? Theme.of(context).colorScheme.primary
-                                    : Colors.grey,
-                                size: 28,
-                              ),
-                            ),
-                            const SizedBox(width: 24),
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.all(20),
-                                decoration: BoxDecoration(
-                                  color: isCompleted
-                                      ? Theme.of(context).colorScheme.primary
-                                            .withValues(alpha: 0.1)
-                                      : Theme.of(context)
-                                            .colorScheme
-                                            .surfaceContainerHighest
-                                            .withValues(alpha: 0.5),
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: isCompleted
-                                        ? Theme.of(context).colorScheme.primary
-                                              .withValues(alpha: 0.3)
-                                        : Theme.of(context).dividerColor,
-                                  ),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      step['title'] as String,
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: isCompleted
-                                            ? Theme.of(
-                                                context,
-                                              ).colorScheme.primary
-                                            : Colors.white,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      step['desc'] as String,
-                                      style: const TextStyle(
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
-          ],
+              ),
+              const Icon(LucideIcons.chevronRight, color: Colors.grey),
+            ],
+          ),
         ),
       ),
     );

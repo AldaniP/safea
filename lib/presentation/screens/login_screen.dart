@@ -44,7 +44,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       if (updates.isNotEmpty) {
-        await ProfileService.updateProfile(updates);
+        await context.read<ProfileService>().updateProfile(updates);
       }
 
       if (!mounted) return;

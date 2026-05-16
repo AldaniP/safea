@@ -1,15 +1,17 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class ProfileService {
-  static const String _key = 'safea_profile';
-  static SharedPreferences? _prefs;
+import 'package:flutter/foundation.dart';
 
-  static Future<void> init() async {
+class ProfileService extends ChangeNotifier {
+  static const String _key = 'safea_profile';
+  SharedPreferences? _prefs;
+
+  Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
   }
 
-  static Map<String, dynamic> getProfile() {
+  Map<String, dynamic> getProfile() {
     final data = _prefs?.getString(_key);
     if (data != null) {
       try {
@@ -34,11 +36,12 @@ class ProfileService {
     return defaultProfile;
   }
 
-  static Future<void> saveProfile(Map<String, dynamic> profile) async {
+  Future<void> saveProfile(Map<String, dynamic> profile) async {
     await _prefs?.setString(_key, jsonEncode(profile));
+    notifyListeners();
   }
 
-  static Future<void> updateProfile(Map<String, dynamic> updates) async {
+  Future<void> updateProfile(Map<String, dynamic> updates) async {
     final current = getProfile();
     if (updates.containsKey('lastScore') &&
         updates['lastScore'] != current['lastScore']) {
@@ -48,7 +51,7 @@ class ProfileService {
     await saveProfile(updated);
   }
 
-  static Future<void> addPoints(int amount) async {
+  Future<void> addPoints(int amount) async {
     final current = getProfile();
     await updateProfile({'points': (current['points'] as int) + amount});
   }

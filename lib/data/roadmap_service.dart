@@ -1,15 +1,17 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class RoadmapService {
-  static const String _key = 'safea_roadmap';
-  static SharedPreferences? _prefs;
+import 'package:flutter/foundation.dart';
 
-  static Future<void> init() async {
+class RoadmapService extends ChangeNotifier {
+  static const String _key = 'safea_roadmap';
+  SharedPreferences? _prefs;
+
+  Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
   }
 
-  static List<Map<String, dynamic>> getRoadmap() {
+  List<Map<String, dynamic>> getRoadmap() {
     final data = _prefs?.getString(_key);
     if (data != null) {
       try {
@@ -53,16 +55,17 @@ class RoadmapService {
     return initialSteps;
   }
 
-  static Future<void> saveRoadmap(List<Map<String, dynamic>> steps) async {
+  Future<void> saveRoadmap(List<Map<String, dynamic>> steps) async {
     await _prefs?.setString(_key, jsonEncode(steps));
   }
 
-  static Future<List<Map<String, dynamic>>> toggleRoadmapStep(int id) async {
+  Future<List<Map<String, dynamic>>> toggleRoadmapStep(int id) async {
     final steps = getRoadmap();
     final index = steps.indexWhere((s) => s['id'] == id);
     if (index != -1) {
       steps[index]['completed'] = !(steps[index]['completed'] as bool);
       await saveRoadmap(steps);
+      notifyListeners();
     }
     return steps;
   }

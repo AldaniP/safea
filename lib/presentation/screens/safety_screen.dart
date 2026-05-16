@@ -1,3 +1,4 @@
+import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:file_picker/file_picker.dart';
@@ -36,8 +37,8 @@ class _SafetyScreenState extends State<SafetyScreen> {
 
   void _loadData() {
     setState(() {
-      _safetyPlan = VaultService.getSafetyPlan();
-      _hasPin = VaultService.isVaultSetup();
+      _safetyPlan = context.read<VaultService>().getSafetyPlan();
+      _hasPin = context.read<VaultService>().isVaultSetup();
     });
   }
 
@@ -58,7 +59,7 @@ class _SafetyScreenState extends State<SafetyScreen> {
 
   void _handleSavePlan() async {
     if (_safetyPlan != null) {
-      await VaultService.saveSafetyPlan(_safetyPlan!);
+      await context.read<VaultService>().saveSafetyPlan(_safetyPlan!);
       setState(() {
         _isEditing = false;
       });
@@ -91,19 +92,19 @@ class _SafetyScreenState extends State<SafetyScreen> {
         });
         return;
       }
-      await VaultService.setupVault(pin);
+      await context.read<VaultService>().setupVault(pin);
       setState(() {
         _hasPin = true;
         _isUnlocked = true;
         _pinController.clear();
-        _notes = VaultService.getNotes();
+        _notes = context.read<VaultService>().getNotes();
       });
     } else {
-      if (VaultService.verifyPin(pin)) {
+      if (context.read<VaultService>().verifyPin(pin)) {
         setState(() {
           _isUnlocked = true;
           _pinController.clear();
-          _notes = VaultService.getNotes();
+          _notes = context.read<VaultService>().getNotes();
         });
       } else {
         setState(() {
@@ -144,10 +145,10 @@ class _SafetyScreenState extends State<SafetyScreen> {
     final content = _noteController.text.trim();
     if (content.isEmpty && _selectedFile == null) return;
 
-    final success = await VaultService.addNote(content, _selectedFile);
+    final success = await context.read<VaultService>().addNote(content, _selectedFile);
     if (success) {
       setState(() {
-        _notes = VaultService.getNotes();
+        _notes = context.read<VaultService>().getNotes();
         _noteController.clear();
         _selectedFile = null;
       });
@@ -164,7 +165,7 @@ class _SafetyScreenState extends State<SafetyScreen> {
 
   void _handlePanicWipe() async {
     // In a real app, use a proper dialog
-    await VaultService.panicWipe();
+    await context.read<VaultService>().panicWipe();
     setState(() {
       _hasPin = false;
       _isUnlocked = false;

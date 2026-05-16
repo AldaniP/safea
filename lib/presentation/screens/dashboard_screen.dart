@@ -1,3 +1,4 @@
+import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -15,30 +16,13 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   bool _showNotifications = false;
 
-  late Map<String, dynamic> _profile;
-  late List<Map<String, dynamic>> _reminders;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadData();
-  }
-
-  void _loadData() {
-    _profile = ProfileService.getProfile();
-    _reminders = RemindersService.getReminders();
-  }
-
   void _toggleReminder(String id) async {
-    await RemindersService.markReminderCompleted(id);
-    setState(() {
-      _loadData();
-    });
+    await context.read<RemindersService>().markReminderCompleted(id);
   }
 
-  String _getScoreDirection() {
-    final lastScore = _profile['lastScore'] as int;
-    final previousScore = _profile['previousScore'] as int;
+  String _getScoreDirection(Map<String, dynamic> profile) {
+    final lastScore = profile['lastScore'] as int;
+    final previousScore = profile['previousScore'] as int;
 
     if (lastScore > previousScore) {
       return 'Naik ${lastScore - previousScore} poin dari asesmen sebelumnya';
@@ -62,15 +46,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final profile = context.watch<ProfileService>().getProfile();
+    final reminders = context.watch<RemindersService>().getReminders();
+
     return Scaffold(
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(24.0),
           children: [
-            _buildHeader(context),
+            _buildHeader(context, profile),
             if (_showNotifications) _buildNotificationsPanel(context),
             const SizedBox(height: 24),
-            _buildTopCards(context),
+            _buildTopCards(context, profile),
             const SizedBox(height: 32),
             LayoutBuilder(
               builder: (context, constraints) {
@@ -80,7 +67,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       Expanded(child: _buildRelaxationRecommendations(context)),
                       const SizedBox(width: 24),
-                      Expanded(child: _buildSmartReminders(context)),
+                      Expanded(child: _buildSmartReminders(context, reminders)),
                     ],
                   );
                 }
@@ -89,7 +76,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     _buildRelaxationRecommendations(context),
                     const SizedBox(height: 32),
-                    _buildSmartReminders(context),
+                    _buildSmartReminders(context, reminders),
                   ],
                 );
               },
@@ -100,7 +87,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, Map<String, dynamic> profile) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isWide = constraints.maxWidth > 600;
@@ -110,7 +97,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Selamat Pagi, ${_profile['name']}',
+                  'Selamat Pagi, ${profile['name']}',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -208,7 +195,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildTopCards(BuildContext context) {
+  Widget _buildTopCards(BuildContext context, Map<String, dynamic> profile) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isWide = constraints.maxWidth > 800;
@@ -233,7 +220,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '${_profile['lastScore']}',
+                        '${profile['lastScore']}',
                         style: const TextStyle(
                           fontSize: 36,
                           fontWeight: FontWeight.bold,
@@ -251,7 +238,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              _getScoreDirection(),
+                              _getScoreDirection(profile),
                               style: TextStyle(
                                 color: Theme.of(context).colorScheme.primary,
                                 fontSize: 12,
@@ -287,8 +274,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        _profile['lastSession'] != null
-                            ? 'Bersama ${_profile['lastSession']['doctor']}'
+                        profile['lastSession'] != null
+                            ? 'Bersama ${profile['lastSession']['doctor']}'
                             : 'Belum ada sesi',
                         style: const TextStyle(
                           color: Colors.grey,
@@ -298,21 +285,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       const SizedBox(height: 16),
                       InkWell(
                         onTap: () => context.go('/consultation'),
-                        child: Row(
-                          children: [
-                            Text(
-                              'Jadwalkan sesi',
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.primary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Icon(
-                              LucideIcons.chevronRight,
-                              size: 16,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                          ],
+                        child: Text(
+                          'Lihat Catatan >',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                     ],
@@ -323,24 +301,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
             SizedBox(
               width: isWide ? (constraints.maxWidth - 48) / 3 : double.infinity,
               child: Card(
-                color: const Color(
-                  0xFF0F766E,
-                ), // Gradient fallback to solid for now
-                child: Padding(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF818CF8), Color(0xFFC084FC)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
                   padding: const EdgeInsets.all(20.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Total Reward Point',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontWeight: FontWeight.w500,
-                        ),
+                      const Row(
+                        children: [
+                          Icon(LucideIcons.flame, color: Colors.white, size: 20),
+                          SizedBox(width: 8),
+                          Text(
+                            'Streak Poin',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '${_profile['points']}',
+                        '${profile['points']}',
                         style: const TextStyle(
                           fontSize: 36,
                           fontWeight: FontWeight.bold,
@@ -475,7 +464,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildSmartReminders(BuildContext context) {
+  Widget _buildSmartReminders(BuildContext context, List<Map<String, dynamic>> reminders) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -492,10 +481,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: _reminders.length,
+            itemCount: reminders.length,
             separatorBuilder: (context, index) => const Divider(height: 1),
             itemBuilder: (context, index) {
-              final r = _reminders[index];
+              final r = reminders[index];
               final isCompleted = r['isCompleted'] as bool;
               return Padding(
                 padding: const EdgeInsets.all(16.0),

@@ -2,15 +2,17 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class RemindersService {
-  static const String _key = 'safea_reminders';
-  static SharedPreferences? _prefs;
+import 'package:flutter/foundation.dart';
 
-  static Future<void> init() async {
+class RemindersService extends ChangeNotifier {
+  static const String _key = 'safea_reminders';
+  SharedPreferences? _prefs;
+
+  Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
   }
 
-  static List<Map<String, dynamic>> getReminders() {
+  List<Map<String, dynamic>> getReminders() {
     final data = _prefs?.getString(_key);
     if (data != null) {
       try {
@@ -49,13 +51,14 @@ class RemindersService {
     return defaultReminders;
   }
 
-  static Future<void> saveReminders(
+  Future<void> saveReminders(
     List<Map<String, dynamic>> reminders,
   ) async {
     await _prefs?.setString(_key, jsonEncode(reminders));
+    notifyListeners();
   }
 
-  static Future<void> markReminderCompleted(String id) async {
+  Future<void> markReminderCompleted(String id) async {
     final reminders = getReminders();
     final index = reminders.indexWhere((r) => r['id'] == id);
     if (index != -1) {
@@ -64,7 +67,7 @@ class RemindersService {
     }
   }
 
-  static Future<void> addReminder(Map<String, dynamic> reminder) async {
+  Future<void> addReminder(Map<String, dynamic> reminder) async {
     final reminders = getReminders();
     final newReminder = {
       ...reminder,

@@ -1,3 +1,4 @@
+import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
@@ -23,7 +24,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
 
   void _loadPosts() {
     setState(() {
-      _posts = CommunityService.getCommunityPosts();
+      _posts = context.read<CommunityService>().getCommunityPosts();
     });
   }
 
@@ -31,7 +32,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
     final text = _postController.text.trim();
     if (text.isEmpty) return;
 
-    await CommunityService.addCommunityPost(text);
+    await context.read<CommunityService>().addCommunityPost(text);
     _postController.clear();
     _loadPosts();
   }
@@ -39,7 +40,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
   void _handleLike(String id) async {
     if (_likedPosts.contains(id)) return;
 
-    await CommunityService.likePost(id);
+    await context.read<CommunityService>().likePost(id);
     setState(() {
       _likedPosts.add(id);
       _loadPosts();
